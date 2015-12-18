@@ -26,10 +26,21 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
  }
 
 function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
-	dpm($form);
-	$edit_quantity_array=$form_state['edit_quantity'][0]['#value'];
-	foreach ($variable as $key => $value) {
-		dpm($edit_quantity_array);
+	//dpm($form_state);
+	$line_item_array=$form_state['order']->commerce_line_items['und'];
+	//dpm($line_item_array);
+	$edit_quantity_array=$form_state['values']['edit_quantity'];
+	//dpm($edit_quantity_array);
+	foreach ($line_item_array as $key => $value) {
+		$line_id=$value['line_item_id'];
+		$line=commerce_line_item_load($line_id);
+		$product_id=$line->commerce_product['und'][0]['product_id'];
+		$product=commerce_product_load($product_id);
+		$pre_count=isset($product->field_per_count_limit['und'][0]['value'])?($product->field_per_count_limit['und'][0]['value']):NULL;
+		$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
+		if ($edit_quantity_array[$key]>$pre_count) {
+			form_set_error('quantity',t("很抱歉一次最多只能訂購 $pre_count 條"));
+		}
 	}
  }
 
