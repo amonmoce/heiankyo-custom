@@ -39,9 +39,11 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
 		$pre_count=isset($product->field_per_count_limit['und'][0]['value'])?($product->field_per_count_limit['und'][0]['value']):NULL;
 		$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
 		$product_title=$product->title;
-		dpm($product);
 		if ($edit_quantity_array[$key]>$pre_count) {
-			form_set_error('quantity',t("很抱歉 $product_title 一次最多只能訂購 $pre_count 條"));
+			form_set_error('quantity',t("很抱歉 <span>$product_title</span> 一次最多只能訂購 $pre_count 條"));
+		}
+		if($edit_quantity_array[$key]>$pre_tt){
+			form_set_error('quantity',t("很抱歉 <span>$product_title</span> 今日只剩下 $pre_tt 條"));
 		}
 	}
  }
