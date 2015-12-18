@@ -1,0 +1,36 @@
+<?php
+
+//將/node這個頁面讓他變成not-found
+function hellosanta_menu_alter(&$items) {
+    $items['node']['page callback'] = 'drupal_not_found';
+}
+
+
+
+function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_state, $form_id){	
+	// dpm($form);
+
+    if($form['#attributes']['class'][0]='commerce-add-to-cart'){
+ 		   
+ 		$form['submit']['#value']='加入購物車';
+ 	}
+    
+}
+
+ function hellosanta_form_alter(&$form, &$form_state, $form_id)
+ {
+ 	//dpm($form);
+ 	if($form_id=='views_form_commerce_cart_form_default'){
+		 $form['#validate'][] = 'hellosanta_batch_commerce_form_validate';
+	}
+ }
+
+function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
+	dpm($form);
+	$edit_quantity_array=$form_state['edit_quantity'][0]['#value'];
+	foreach ($variable as $key => $value) {
+		dpm($edit_quantity_array);
+	}
+ }
+
+?>

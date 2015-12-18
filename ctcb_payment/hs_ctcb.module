@@ -1,0 +1,303 @@
+<?php
+
+
+/**
+*此模組主要是給Commerce的payment使用
+*金流為串接智付寶Pay2go
+*程式撰寫：Victor Yang
+*初次撰寫日期：20150916
+*/
+
+function hs_ctcb_menu(){
+  $items = array();
+  $items['checkout/%/confirm'] = array(
+    'title' => t('傳送中'),
+    'page callback' => 'confirm_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback'=>TRUE,
+  );
+  $items['checkout/%/return'] = array(
+    'title' => t('結果回傳'),
+    'page callback' => 'return_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback'=>TRUE,
+  );
+  return $items;
+}
+
+function hs_ctcb_commerce_order_presave($order) {
+  $order->field_order_serial['und'][0]['value']=date("Ymdhis");
+}
+
+function hs_ctcb_commerce_payment_method_info() {
+  $payment_methods = array();
+
+  $payment_methods['credit_card'] = array(
+    'base'  => 'ctcb_credit_card',
+    'title' => t('信用卡'),
+    'description' => t('提供信用卡付款服務'),
+    'active' => False,
+  );
+
+
+  return $payment_methods;
+}
+
+/**
+ * Returns the default settings for the So-Net Payment.
+ */
+function hs_ctcb_default_settings() {
+  //  return array(
+  //   'pay2go_status' => 'dev',
+  // );
+}
+
+/*
+* Sonet Payment Environment Setting Form
+*
+*/
+
+function ctcb_credit_card_settings_form($settings = NULL)
+{ 
+  
+}
+
+/**
+ * Payment method callback: submit form.
+ */
+function ctcb_credit_card_submit_form($payment_method, $pane_values, $checkout_pane, $order) {
+  
+}
+
+/**
+ * Payment method callback: submit form submission.
+ */
+function ctcb_credit_card_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
+
+  global $base_url;
+  
+  //加入此次付款方式到payment
+  
+  // //建立commerce交易紀錄
+  // $transaction = commerce_payment_transaction_new('cash', $order_id);
+
+  // $transaction->amount = $charge['amount'];
+  // $transaction->currency_code = $order->commerce_order_total['und'][0]['currency_code'];
+  // $transaction->status = COMMERCE_PAYMENT_STATUS_FAILURE;
+  // $transaction->remote_id = ;
+  // commerce_payment_transaction_save($transaction);
+
+  $method_id=$payment_method['method_id'];
+
+  //取得傳送參數
+  $data=ctcb_environment_argument($method_id,$order,$charge);
+  
+  $full_url = url($base_url.'/checkout/'.$order->order_id.'/confirm', array('query' => $data));
+    
+  drupal_goto($full_url); 
+
+
+
+}
+
+
+
+
+function hs_ctcb_variable_group_info() {
+  $groups['ctcb_all'] = array(
+    'title' => t('中國信託全域設定'), 
+    'description' => t('中國信託全域設定'), 
+  );
+
+  return $groups;
+}
+
+
+
+function hs_ctcb_variable_info() {
+  
+  $variables['MerchantID'] = array(
+    'name' => 'MerchantID',
+    'title' => t('MerchantID'),
+    'description' => t('中國信託提供的MerchantID'),
+    'default' => '',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+  
+  $variables['TerminalID'] = array(
+    'name' => 'TerminalID',
+    'title' => t('TerminalID'),
+    'description' => t('中國信託提供的TerminalID'),
+    'default' => '',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+  
+  $variables['ctcb_dev_url'] = array(
+    'name' => 'ctcb_dev_url',
+    'title' => t('測試串接網址'),
+    'description' => t('請跟中國信託申請測試網址'),
+    'default' => 'https://testepos.ctbcbank.com:2011',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+  $variables['ctcb_pro_url'] = array(
+    'name' => 'ctcb_pro_url',
+    'title' => t('正式串接網址'),
+    'description' => t('請跟中國信託申請正式網址'),
+    'default' => ' ',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+    $variables['ctcb_key'] = array(
+    'name' => 'ctcb_key',
+    'title' => t('中國信託後台壓碼'),
+    'description' => t('此為貴特店在 URL 帳務管理後台登錄的壓碼字串。'),
+    'default' => ' ',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+  $variables['ctcb_status'] = array(
+    'name'   => 'ctcb_status',
+    'title' => t('中國信託儲值系統狀態'),
+    'description' => t('請選擇中國信託儲值系統狀態。例如：測試環境DEV,正式環境Production'),
+    'default' => 'dev',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'radios',
+      '#options' => array(
+        'dev' => t('測試環境'),
+        'production' => t('正式環境'),
+      ),
+    ),
+  );
+
+  $variables['merID'] = array(
+    'name'   => 'merID',
+    'title' => t('特店編號'),
+    'description' => t('請跟中國信託索取'),
+    'default' => '',
+    'type' => 'string',
+    'group' => 'ctcb_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+  return $variables;
+}
+
+function ctcb_environment_argument($method_id,$order,$charge){
+
+  global $base_url;
+
+  include_once("auth_mpi_mac.php");
+
+
+  $price = $charge['amount'];
+  $price = $price/100; //去除小數點那兩位
+
+  /** Payment Method Arguements **/
+  $MerchantID=variable_get('MerchantID');
+  $TerminalID=variable_get('TerminalID');
+  $Key=variable_get('ctcb_key');
+  $lidm=$order->field_order_serial['und'][0]['value'];
+  $purchAmt=$price;
+  $txType=0;
+  $Option=1;
+  $MerchantName='平安京';
+  $OrderDetail='Product Description';
+  $AutoCap=1;
+  $Customize=1;
+  $debug=0;
+
+  $MACString=auth_in_mac($MerchantID,$TerminalID,$lidm,$purchAmt,$txType,$Option,$Key,$MerchantName,$AuthResURL,$OrderDetail,$AutoCap,$Customize,$debug);
+  /** Payment Method Arguements **/
+
+
+  $order_id=$order->order_id;
+  $AuthResURL=$base_url.'/checkout/'.$order->order_id.'/return';
+
+  $URLEnc=get_auth_urlenc($MerchantID,$TerminalID,$lidm,$purchAmt,$txType,$Option,$Key,$MerchantName,$AuthResURL,$OrderDetail,$AutoCap,$Customize,$MACString,$debug);
+
+
+
+
+  $data=array(
+    'MerchantID'  => $MerchantID,
+    'TerminalID'  => $TerminalID,
+    'lidm'        => $lidm,
+    'purchAmt'    => $purchAmt,
+    'txType'      => 0,
+    'Option'      => 1,
+    'Key'         => $Key,
+    'MerchantName'=> '平安京',
+    'AuthResURL'  => $AuthResURL,
+    'OrderDetail' => 'Product Description',
+    'AutoCap'     => 1,
+    'Customize'   => 1,
+    'debug'       => 0,
+  );
+
+  $merID=variable_get('merID');
+
+
+
+  return $data;
+}
+
+function confirm_page(){
+  $ctcb_status=variable_get('ctcb_status');
+  
+  if($ctcb_status=='dev'){
+    $actionUrl=variable_get('ctcb_dev_url');     
+  }
+  elseif($ctcb_status=='production'){
+    $actionUrl=variable_get('ctcb_pro_url');
+  }
+  
+  //將此值Post到Sonet對應的頁面，進行後續的動作。
+  $output='<form action="'.$actionUrl.'" method="post" name="frm">';
+  foreach ($_GET as $a => $b) {
+    $output=$output."<input type='hidden' name='".htmlentities($a)."' value='".htmlentities($b)."'>";
+  }
+  //$output=$output.'</form><script language="JavaScript">document.frm.submit()</script>請稍待。。。';
+
+  return $output;
+}
+
+function return_page(){
+
+  return 'test';
+}
+
+?>
+
+

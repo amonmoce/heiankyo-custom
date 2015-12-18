@@ -1,0 +1,331 @@
+<?php
+
+
+/**
+*此模組主要是給Commerce的payment使用
+*金流串接為玉山銀行
+*/
+
+function hs_esun_menu(){
+  $items = array();
+  $items['checkout/%/confirm'] = array(
+    'title' => t('傳送中'),
+    'page callback' => 'esun_confirm_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback'=>TRUE,
+  );
+  $items['checkout/%/return'] = array(
+    'title' => t('結果回傳'),
+    'page callback' => 'esun_return_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback'=>TRUE,
+  );
+  return $items;
+}
+
+function hs_esun_commerce_order_presave($order) {
+  $order->field_order_serial['und'][0]['value']=date("Ymdhis");
+}
+
+function hs_esun_commerce_payment_method_info() {
+  $payment_methods = array();
+
+  $payment_methods['esun_credit_card'] = array(
+    'base'  => 'esun_credit_card',
+    'title' => t('信用卡'),
+    'description' => t('玉山銀行信用卡付款服務'),
+    'active' => False,
+  );
+
+
+  return $payment_methods;
+}
+
+/**
+ * Returns the default settings for the So-Net Payment.
+ */
+function hs_esun_default_settings() {
+
+}
+
+/*
+* Sonet Payment Environment Setting Form
+*
+*/
+
+function esun_credit_card_settings_form($settings = NULL)
+{
+
+}
+
+/**
+ * Payment method callback: submit form.
+ */
+function esun_credit_card_submit_form($payment_method, $pane_values, $checkout_pane, $order) {
+
+}
+
+/**
+ * Payment method callback: submit form submission.
+ */
+function esun_credit_card_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
+
+  global $base_url;
+
+  $method_id=$payment_method['method_id'];
+
+  //取得傳送參數
+  $data=esun_environment_argument($method_id,$order,$charge);
+
+  $full_url = url($base_url.'/checkout/'.$order->order_id.'/confirm', array('query' => $data));
+
+  drupal_goto($full_url);
+}
+
+/*
+variable in esun
+*/
+function hs_esun_variable_group_info() {
+  $groups['esun_all'] = array(
+    'title' => t('玉山銀行全域設定'),
+    'description' => t('玉山銀行全域設定'),
+  );
+
+  return $groups;
+}
+
+
+function hs_esun_variable_info() {
+  $variables['MID'] = array(
+    'name' => 'MID',
+    'title' => t('特約店代碼'),
+    'description' => t('玉山銀行特店代碼，由玉山銀行提供'),
+    'default' => '8089010277',
+    'type' => 'string',
+    'group' => 'esun_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+  $variables['Mcode'] = array(
+    'name' => 'Mcode',
+    'title' => t('押碼'),
+    'description' => t('玉山銀行壓碼，由玉山銀行提供'),
+    'default' => 'MHP4P5ZVMYYICDA7LVUM2GNX9NFIZMRG',
+    'type' => 'string',
+    'group' => 'esun_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+  $variables['esun_status'] = array(
+    'name'   => 'esun_status',
+    'title' => t('玉山銀行儲值系統狀態'),
+    'description' => t('請選擇玉山銀行儲值系統狀態。例如：測試環境DEV,正式環境Production'),
+    'default' => 'dev',
+    'type' => 'string',
+    'group' => 'esun_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'radios',
+      '#options' => array(
+        'dev' => t('測試環境'),
+        'production' => t('正式環境'),
+      ),
+    ),
+  );
+  $variables['dev_url'] = array(
+    'name' => 'dev_url',
+    'title' => t('測試環境網址'),
+    'description' => t('玉山銀行技術手冊'),
+    'default' => 'https://acqtest.esunbank.com.tw/acq_online/online/sale42Mobile.htm',
+    'type' => 'string',
+    'group' => 'esun_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+  $variables['pro_url'] = array(
+    'name' => 'pro_url',
+    'title' => t('正式環境網址'),
+    'description' => t('玉山銀行技術手冊'),
+    'default' => 'https://acq.esunbank.com.tw/acq_online/online/sale42Mobile47.htm',
+    'type' => 'string',
+    'group' => 'esun_all',
+    'token' => TRUE,
+    'element' => array(
+      '#type' => 'textfield',
+    ),
+  );
+
+  return $variables;
+}
+
+
+function esun_environment_argument($method_id,$order,$charge){
+
+  global $base_url;
+
+  $price = $charge['amount'];
+  $price = $price/10; //去除小數點一位
+
+  /** Payment Method Arguements **/
+  $MID=variable_get('MID');
+  $CID='';
+  $TID='EC000001';
+  $ONO=$order->field_order_serial['und'][0]['value'];
+  $TA=$price;
+  $U=$base_url.'/checkout/'.$order->order_id.'/return';
+  $Mcode=variable_get('Mcode');
+  $M=hash('md5',$MID.'&'.$CID.'&'.$TID.'&'.$ONO.'&'.$TA.'&'.$U.'&'.$Mcode);
+
+  $data=array(
+    'MID'  => $MID,
+    'CID'  => $CID,
+    'TID'  => $TID,
+    'ONO'  => $ONO,
+    'TA'   => $TA,
+    'U'    => $U,
+    'M'    => $M,
+  );
+
+
+
+  return $data;
+}
+
+
+function esun_confirm_page(){
+  $ctcb_status=variable_get('esun_status');
+
+  if($ctcb_status=='dev'){
+    $actionUrl=variable_get('dev_url');
+  }
+  elseif($ctcb_status=='production'){
+    $actionUrl=variable_get('pro_url');
+  }
+
+  //將此值Post到ESUN對應的頁面，進行後續的動作。
+  $output='<form action="'.$actionUrl.'" method="post" name="frm">';
+  foreach ($_GET as $a => $b) {
+    $output=$output."<input type='hidden' name='".htmlentities($a)."' value='".htmlentities($b)."'>";
+  }
+  $output=$output.'</form><script language="JavaScript">document.frm.submit()</script>請稍待。。。';
+
+  return $output;
+}
+
+
+function esun_return_page(){
+
+  global $user;
+  $userid=$user->uid;
+
+  //取得GET參數
+  $RC=empty($_GET['RC'])?'':$_GET['RC'];
+  $MID=empty($_GET['MID'])?'':$_GET['MID'];
+  $ONO=empty($_GET['ONO'])?'':$_GET['ONO'];
+  $LTD=empty($_GET['LTD'])?'':$_GET['LTD'];
+  $LTT=empty($_GET['LTT'])?'':$_GET['LTT'];
+  $RRN=empty($_GET['RRN'])?'':$_GET['RRN'];
+  $AIR=empty($_GET['AIR'])?'':$_GET['AIR'];
+  $AN=empty($_GET['AN'])?'':$_GET['AN'];
+  $M1=empty($_GET['M'])?'':$_GET['M'];
+
+
+  $Mcode=variable_get('Mcode');
+  $M2=hash('md5',$RC.'&'.$MID.'&'.$ONO.'&'.$LTD.'&'.$LTT.'&'.$RRN.'&'.$AIR.'&'.$AN.'&'.$Mcode);
+
+  //取得訂單id
+  $order_id=arg(1);
+  $order=commerce_order_load($order_id);
+
+  if($M1==$M2){ //代表資料完整,並且交易成功
+
+
+    // Get the order wrapper
+    $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+    // Order total.
+    $order_total = $order_wrapper->commerce_order_total->value();
+
+    //加入此次付款方式到payment
+
+    //建立commerce交易紀錄
+    $transaction = commerce_payment_transaction_new('esun_credit_card', $order_id);
+    $transaction->amount = $order_total['amount'];
+    $transaction->currency_code = $order_total['currency_code'];
+    $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+    commerce_payment_transaction_save($transaction);
+    $transaction_id=$transaction->transaction_id;
+
+
+
+    //建立金流紀錄
+    $payment_record = new stdClass;
+    $payment_record->type = 'esun_record';
+    $payment_record->title=$ONO;
+    $payment_record->uid = $userid;
+    $payment_record->language = LANGUAGE_NONE;
+    $payment_record->field_order[LANGUAGE_NONE][0]['target_id']=$order_id;
+    $payment_record->field_order_transaction[LANGUAGE_NONE][0]['target_id']=$transaction_id;
+    $payment_record->field_rc[LANGUAGE_NONE][0]['value']=$RC;
+    $payment_record->field_ltd[LANGUAGE_NONE][0]['value']=Date('Y-m-d',strtotime($LTD)).' '.Date('H:i:s',strtotime($LTT));
+    $payment_record->field_rrn[LANGUAGE_NONE][0]['value']=$RRN;
+    $payment_record->field_air[LANGUAGE_NONE][0]['value']=$AIR;
+    $payment_record->field_an[LANGUAGE_NONE][0]['value']=$AN;
+    $payment_record->field_status[LANGUAGE_NONE][0]['value']=1;
+    node_object_prepare($payment_record);
+    node_save($payment_record);
+
+    $order = commerce_order_status_update($order, 'checkout_complete');
+    commerce_checkout_complete($order);
+    drupal_goto('/checkout/'.$order_id);
+
+  }
+  elseif(!empty($ONO)){ //若在交易失敗的情況下，則會產生 RC & MID & ONO 三比資料
+
+    // Get the order wrapper
+    $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+    // Order total.
+    $order_total = $order_wrapper->commerce_order_total->value();
+
+    //加入此次付款方式到payment
+
+    //建立commerce交易紀錄(失敗狀態)
+    $transaction = commerce_payment_transaction_new('esun_credit_card', $order_id);
+    $transaction->amount = $order_total['amount'];
+    $transaction->currency_code = $order_total['currency_code'];
+    $transaction->status = COMMERCE_PAYMENT_STATUS_FAILURE;
+    commerce_payment_transaction_save($transaction);
+    $transaction_id=$transaction->transaction_id;
+
+    //建立金流紀錄
+    $payment_record = new stdClass;
+    $payment_record->type = 'esun_record';
+    $payment_record->title=$ONO;
+    $payment_record->uid=$userid;
+    $payment_record->language = LANGUAGE_NONE;
+    $payment_record->field_order[LANGUAGE_NONE][0]['target_id']=$order_id;
+    $payment_record->field_order_transaction[LANGUAGE_NONE][0]['target_id']=$transaction_id;
+    $payment_record->field_status[LANGUAGE_NONE][0]['value']=0;
+    node_object_prepare($payment_record);
+    node_save($payment_record);
+
+    drupal_set_message('交易失敗。錯誤代碼：'.$RC,'ERROR');
+
+    drupal_goto('/checkout/'.$order_id);
+  }
+  else{
+    drupal_exit();
+  }
+
+}
+
+?>
+
+

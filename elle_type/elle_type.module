@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the ELLE TYPE feature.
+ */
+
+include_once 'elle_type.features.inc';

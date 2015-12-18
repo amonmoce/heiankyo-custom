@@ -1,0 +1,12 @@
+name = ESUN Commerce Payment Module
+description = Provides an ESUN payment method for Commerce.
+package = HelloSanta Module(ESUN)
+dependencies[] = commerce
+core = 7.x
+
+; Information added by Drupal.org packaging script on 2015-09-15
+version = "7.x-2.2"
+core = "7.x"
+project = "commerce_esun"
+datestamp = "1428479882"
+

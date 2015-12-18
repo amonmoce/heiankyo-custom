@@ -1,0 +1,15 @@
+name=Hellosanta Module
+description=Hellosanta Module created by Victor
+package=Hellosanta Module
+core=7.x
+
+files[]=hellosanta.install
+files[]=hellosanta.info
+files[]=hellosanta.module
+
+
+; Information added by HelloSanta Engineer Victor Yang
+version = "7.x-1.1"
+core = "7.x"
+project = "Hellosanta"
+
