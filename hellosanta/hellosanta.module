@@ -36,16 +36,28 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
 		$line=commerce_line_item_load($line_id);
 		$product_id=$line->commerce_product['und'][0]['product_id'];
 		$product=commerce_product_load($product_id);
-		$pre_count=isset($product->field_per_count_limit['und'][0]['value'])?($product->field_per_count_limit['und'][0]['value']):NULL;
-		$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
+		
 		$product_title=$product->title;
-		//dpm($product);
-		if ($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_count) {
-			form_set_error('quantity',t("很抱歉 <span>$product_title</span> 一次最多只能訂購 $pre_count 條"));
+		$product_type=$product->type;
+		dpm($product_type);
+		if($product_type=='class'){
+			$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
+			if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
+				form_set_error('quantity',t("很抱歉 <span>$product_title</span> 今日只剩下 $pre_tt 條"));
+			}
 		}
-		if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
-			form_set_error('quantity',t("很抱歉 <span>$product_title</span> 今日只剩下 $pre_tt 條"));
+		elseif($product_type=='product'){
+			$pre_count=isset($product->field_per_count_limit['und'][0]['value'])?($product->field_per_count_limit['und'][0]['value']):NULL;
+			$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
+			
+			if ($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_count) {
+				form_set_error('quantity',t("很抱歉 <span>$product_title</span> 一次最多只能訂購 $pre_count 條"));
+			}
+			if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
+				form_set_error('quantity',t("很抱歉 <span>$product_title</span> 今日只剩下 $pre_tt 條"));
+			}
 		}
+		
 	}
  }
 
