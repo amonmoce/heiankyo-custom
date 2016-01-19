@@ -8,7 +8,6 @@ function hellosanta_menu_alter(&$items) {
 
 
 function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_state, $form_id){
-
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
  	}
@@ -31,7 +30,7 @@ function remark_submit($form, &$form_state) {
 
  function hellosanta_form_alter(&$form, &$form_state, $form_id)
  {
- 	// dpm($form_id);
+ 	
  	if($form_id=='views_form_commerce_cart_form_default'){
 		 $form['#validate'][] = 'hellosanta_batch_commerce_form_validate';
 	}
@@ -85,9 +84,114 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
  		$pre_tt=$product->field_total_count['und'][0]['value'];
  		$product->field_total_count['und'][0]['value']=$pre_tt-$line->quantity;
  		commerce_product_save($product);
- 		//dpm($line);
- 		//dpm($product);
- 		//dpm($pre_tt);
  	}
 }
+
+function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_state, $form_id)
+ {
+ 	$order_array=$form_state['order'];
+ 	$line_item_array=$order_array->commerce_line_items['und'];
+ 	foreach ($line_item_array as $key => $value){
+ 		$line_id=$line_item_array[$key]['line_item_id'];
+ 		$line=commerce_line_item_load($line_id);
+ 		if($line->type=='product'){
+ 			$product_id=$line->commerce_product['und'][0]['product_id'];
+ 			$product=commerce_product_load($product_id);
+ 			$product_box_type=$product->field_box_limit['und'][0]['value'];
+ 			if($product->field_box_limit['und'][0]['value']=='0'&&$line->quantity%2==1){
+		 		$form['commerce_shipping']['shipping_service']['#default_value']='my_store';
+				$form['commerce_shipping']['shipping_service']['#options']=array(
+				'my_store'=>t('到店親取: NT$0.0'),
+				);
+				drupal_set_message(t('您所訂購的盒裝數量並未到達偶數盒，如想使用宅配請回到購物車重新選擇數量，來店親取則不受此限制，感謝您。'), 'status');
+ 			}
+ 		}
+ 	}	
+ }
+
+function hellosanta_commerce_shipping_method_info() {
+  $shipping_methods = array();
+  $shipping_methods['hellosanta_shipping_method'] = array(
+    'title' => t('hellosanta shipping method'),
+    'description' => t('shipping method create by hellosanta.'),
+  );
+  return $shipping_methods;
+}
+
+function hellosanta_commerce_shipping_service_info() {
+  $shipping_services = array();
+  $shipping_services['deliver'] = array(
+    'title' => t('宅配到府'),
+    'display_title' => t('宅配到府'),
+    'shipping_method' => 'hellosanta_shipping_method',
+    'price_component' => 'shipping',
+    'callbacks' => array(
+      'rate' => 'hellosanta_deliver_rate',
+      'details_form' => 'hellosanta_service_deliver_form',
+      'details_form_validate' => 'hellosanta_service_details_form_validate',
+      'details_form_submit' => 'hellosanta_service_details_form_submit',
+    ),
+  );
+  $shipping_services['my_store'] = array(
+    'title' => t('到店親取'),
+    'display_title' => t('到店親取'),
+    'shipping_method' => 'hellosanta_shipping_method',
+    'price_component' => 'shipping',
+    'callbacks' => array(
+      'rate' => 'hellosanta_my_store_rate',
+      // 'details_form' => 'hellosanta_service_details_form',
+      // 'details_form_validate' => 'hellosanta_service_details_form_validate',
+      // 'details_form_submit' => 'hellosanta_service_details_form_submit',
+    ),
+  );
+  return $shipping_services;
+}
+
+/**
+ * Shipping service callback: returns a base price array for a shipping service
+ * calculated for the given order.
+ */
+function hellosanta_deliver_rate($shipping_service, $order) {
+	$line_item_array=$order->commerce_line_items['und'];
+	$box='';
+	$box_total='';
+	foreach ($line_item_array as $key => $value) {
+		$line_id=$order->commerce_line_items['und'][$key]['line_item_id'];
+ 		$line_item=commerce_line_item_load($line_id);
+ 		if($line_item->type=='product'){
+ 			$product_id=$line_item->commerce_product['und'][0]['product_id'];
+ 			$product=commerce_product_load($product_id);
+ 			$product_box_type=$product->field_box_limit['und'][0]['value'];
+ 			if($product->field_box_limit['und'][0]['value']=='0'){
+ 				$box=$line_item->quantity/2;
+ 				$box_total+=$box;
+ 			}
+ 		}
+	}
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  return array(
+    'amount' => 1450*$box_total,
+    'currency_code' => $order_wrapper->commerce_order_total->currency_code->value(),
+    'data' => array(),
+  );
+}
+
+function hellosanta_my_store_rate($shipping_service, $order) {
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  return array(
+    'amount' => 0,
+    'currency_code' => $order_wrapper->commerce_order_total->currency_code->value(),
+    'data' => array(),
+  );
+}
+
+function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	$full_url=url('cart');
+	  $form = array();
+	$form['shipping_description'] = array(
+      '#markup' => '<a href='.$full_url.'>回到購物車</a>',
+    );
+     return $form;
+}
+
 ?>
