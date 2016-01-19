@@ -5,8 +5,6 @@ function hellosanta_menu_alter(&$items) {
     $items['node']['page callback'] = 'drupal_not_found';
 }
 
-
-
 function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_state, $form_id){
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
@@ -19,7 +17,6 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
 	
 	$form['#submit'][]='remark_submit';
 }
-
 
 function remark_submit($form, &$form_state) {
 	$line_item=$form_state['line_item'];
@@ -188,6 +185,19 @@ function hellosanta_my_store_rate($shipping_service, $order) {
 function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
 	$full_url=url('cart');
 	  $form = array();
+	  $format = 'Y-m-d H:i';
+	  $pane_values['service_details'] += array(
+	  	'time' => '',
+	  	'shipping_description' => '',
+	  	);
+	  $form['time'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('請問您希望的來店親取或宅配到府日期為'),
+    '#date_format' => $format,
+    '#date_label_position' => 'within',
+   '#date_year_range' => '0:+2',
+    '#required' => TRUE,
+  );
 	$form['shipping_description'] = array(
       '#markup' => '<a href='.$full_url.'>回到購物車</a>',
     );
