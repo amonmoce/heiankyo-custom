@@ -47,6 +47,7 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
 		$product=commerce_product_load($product_id);		
 		$product_title=$product->title;
 		$product_type=$product->type;
+		dpm($product_type);
 		if($product_type=='class'){
 			$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
 			if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
@@ -69,19 +70,25 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
  }
 
  function hellosanta_commerce_checkout_complete($order) {
- 	//dpm($order);
  	$oid=$order->order_id;
  	$line_item_array=$order->commerce_line_items['und'];
- 	//dpm($line_item_array);
  	foreach ($line_item_array as $key => $value) {
  		$line_id=$line_item_array[$key]['line_item_id'];
  		$line=commerce_line_item_load($line_id);
- 		$product_id=$line->commerce_product['und'][0]['product_id'];
- 		$product=commerce_product_load($product_id);
- 		$pre_tt=$product->field_total_count['und'][0]['value'];
- 		$product->field_total_count['und'][0]['value']=$pre_tt-$line->quantity;
- 		commerce_product_save($product);
- 	}
+ 		if($line->type=='product'){
+			$product_id=$line->commerce_product['und'][0]['product_id'];
+			$product=commerce_product_load($product_id);
+			$product_type=$product->type;
+			dpm($product);
+			if($product_type=='class' || $product_type=='product'){
+				$pre_tt=$product->field_total_count['und'][0]['value'];
+	 		$product->field_total_count['und'][0]['value']=$pre_tt-$line->quantity;
+	 		commerce_product_save($product);
+			}
+	 	}
+
+	}
+
 }
 
 function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_state, $form_id)
@@ -163,6 +170,10 @@ function hellosanta_deliver_rate($shipping_service, $order) {
  				$box=$line_item->quantity/2;
  				$box_total+=$box;
  			}
+ 			if($product->field_box_limit['und'][0]['value']=='1'){
+ 				$box=$line_item->quantity;
+ 				$box_total+=$box;
+ 			}
  		}
 	}
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
@@ -183,6 +194,7 @@ function hellosanta_my_store_rate($shipping_service, $order) {
 }
 
 function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	
 	$full_url=url('cart');
 	  $form = array();
 	  $format = 'Y-m-d H:i';
@@ -190,14 +202,15 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	  	'time' => '',
 	  	'shipping_description' => '',
 	  	);
-	  $form['time'] = array(
-    '#type' => 'date_popup',
-    '#title' => t('請問您希望的來店親取或宅配到府日期為'),
-    '#date_format' => $format,
-    '#date_label_position' => 'within',
-   '#date_year_range' => '0:+2',
-    '#required' => TRUE,
-  );
+	$form['time'] = array(
+	    '#type' => 'date_popup',	
+	    '#title' => t('請問您希望的來店親取或宅配到府日期為'),
+	    '#date_format' => $format,
+	    '#date_label_position' => 'within',
+	   	'#date_year_range' => '0:+2',
+	    '#required' => TRUE,
+	);
+
 	$form['shipping_description'] = array(
       '#markup' => '<a href='.$full_url.'>回到購物車</a>',
     );
