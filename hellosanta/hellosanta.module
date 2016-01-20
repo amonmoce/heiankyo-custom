@@ -6,14 +6,25 @@ function hellosanta_menu_alter(&$items) {
 }
 
 function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_state, $form_id){
+	// dpm($form_id);
+	// dpm($form);
+	$pid=$form['product_id']['#value'];
+	$product=commerce_product_load($pid);
+	$product_type=$product->type;
+	// dpm($product_type);
+	
+	
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
  	}
- 	$form['remark'] = array(
-	  '#title' => t('備註'),
-	  '#type' => 'textarea',
-	);
-	$form['#submit'][]='remark_submit';
+ 	if($product_type=='gif'){
+ 		$form['remark'] = array(
+		  '#title' => t('請填寫禮盒產品'),
+		  '#type' => 'textarea',
+		);
+		$form['#submit'][]='remark_submit';
+	}
+ 	
 }
 
 function remark_submit($form, &$form_state) {
@@ -122,7 +133,7 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
 function hellosanta_commerce_shipping_method_info() {
 	$shipping_methods = array();
 	$shipping_methods['hellosanta_shipping_method'] = array(
-		'title' => t('hellosanta shipping method'),
+		'title' => t('運送方式'),
 		'description' => t('shipping method create by hellosanta.'),
 		);
 	return $shipping_methods;
