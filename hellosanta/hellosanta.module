@@ -232,7 +232,7 @@ $full_url=url('cart');
 	    '#timepicker_options' => array(
 	    	'rows' => 4,
 	    	'hours' =>array(
-	    	'starts'=> 9,
+	    	'starts'=> 12,
 	    	'ends' => 21,
 	    		),
 		'minutes' => array(
@@ -243,7 +243,7 @@ $full_url=url('cart');
 	    'showCloseButton' => TRUE,
 	    'closeButtonText' => t('Close'),
 	    ),
-	    '#title' => t('請問您希望到店親取或宅配到府時間'),
+	    '#title' => t('請問您希望到店親取時間'),
 	    '#date_format' => $format,
 	    '#date_label_position' => 'within',
 	    '#date_year_range' => '0:+2',
@@ -281,7 +281,7 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    'showCloseButton' => TRUE,
 	    'closeButtonText' => t('Close'),
 	    ),
-	    '#title' => t('請問您希望到店親取或宅配到府時間'),
+	    '#title' => t('請問您希望宅配到府時間'),
 	    '#date_format' => $format,
 	    '#date_label_position' => 'within',
 	    '#date_year_range' => '0:+2',
