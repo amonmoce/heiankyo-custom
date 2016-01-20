@@ -101,10 +101,12 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
  		if($line_item_type=='product'){  //line_item有product跟shipping
  			$product_id=$line->commerce_product['und'][0]['product_id'];
  			$product=commerce_product_load($product_id);
- 			// dpm($product);
- 			$product_box_type=$product->field_box_limit['und'][0]['value'];
- 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一盒
- 				$odd_quantity+=$line->quantity;
+ 			$product_type=$product->type;
+ 			if($product_type=='product'){  //盒裝限制產品
+ 				$product_box_type=$product->field_box_limit['und'][0]['value'];
+	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一盒
+	 				$odd_quantity+=$line->quantity;
+	 			}
  			}
  		}
  	}
@@ -136,7 +138,7 @@ function hellosanta_commerce_shipping_service_info() {
     'callbacks' => array(
       'rate' => 'hellosanta_deliver_rate',
       'details_form' => 'hellosanta_service_deliver_form',
-      'details_form_validate' => 'hellosanta_service_details_form_validate',
+      // 'details_form_validate' => 'hellosanta_service_details_form_validate',
       'details_form_submit' => 'hellosanta_service_details_form_submit',
     ),
   );
@@ -146,10 +148,10 @@ function hellosanta_commerce_shipping_service_info() {
     'shipping_method' => 'hellosanta_shipping_method',
     'price_component' => 'shipping',
     'callbacks' => array(
-      'rate' => 'hellosanta_my_store_rate',
-      // 'details_form' => 'hellosanta_service_details_form',
-      // 'details_form_validate' => 'hellosanta_service_details_form_validate',
-      // 'details_form_submit' => 'hellosanta_service_details_form_submit',
+    	'rate' => 'hellosanta_my_store_rate',
+    	'details_form' => 'hellosanta_service_deliver_form',
+    	// 'details_form_validate' => 'hellosanta_service_details_form_validate',
+    	'details_form_submit' => 'hellosanta_service_details_form_submit',
     ),
   );
   return $shipping_services;
@@ -171,15 +173,19 @@ function hellosanta_deliver_rate($shipping_service, $order) {
  		if($line_item_type=='product'){  //line_item有product跟shipping
  			$product_id=$line_item->commerce_product['und'][0]['product_id'];
  			$product=commerce_product_load($product_id);
- 			$product_box_type=$product->field_box_limit['und'][0]['value'];
- 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一裝
- 				$box=$line_item->quantity/2;  
- 				$box_total+=$box;
+ 			$product_type=$product->type;
+ 			if($product_type=='product'){  //盒裝限制產品
+	 			$product_box_type=$product->field_box_limit['und'][0]['value'];
+	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一裝
+	 				$box=$line_item->quantity/2;  
+	 				$box_total+=$box;
+	 			}
+	 			if($product->field_box_limit['und'][0]['value']=='1'){  //一個一裝
+	 				$box=$line_item->quantity;
+	 				$box_total+=$box;
+	 			}
  			}
- 			if($product->field_box_limit['und'][0]['value']=='1'){  //一個一裝
- 				$box=$line_item->quantity;
- 				$box_total+=$box;
- 			}
+ 			
  		}
 	}
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
@@ -212,26 +218,40 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    '#date_type' => DATE_DATETIME,
 	    '#timepicker' => 'timepicker',
 	    '#timepicker_options' => array(
-	    'rows' => 6,
-	    'minutes' => array(
-	    'starts' => 0,
-	    'ends' => 56,
-	    'interval' => 4,
-	    ),
+	    	'rows' => 4,
+	    	'hours' =>array(
+	    	'starts'=> 9,
+	    	'ends' => 21,
+	    		),
+		'minutes' => array(
+		'starts' => 0,
+		'ends' => 55,
+		'interval' =>5,
+		),
 	    'showCloseButton' => TRUE,
 	    'closeButtonText' => t('Close'),
-    ),
+	    ),
 	    '#title' => t('請問您希望到店親取或宅配到府時間'),
 	    '#date_format' => $format,
 	    '#date_label_position' => 'within',
 	    '#date_year_range' => '0:+2',
 	    '#required' => TRUE,
 	);
-
 	$form['shipping_description'] = array(
 		'#markup' => '<a href='.$full_url.'>回到購物車</a>',
 		);
 	return $form;
+}
+
+function hellosanta_service_details_form_submit($details_form, $details_values, $line_item){
+	$oid=$line_item->order_id;
+	$order_array=commerce_order_load($oid);
+	$hope_time='';
+	$hope_time=$details_form['time']['#value']['date']." ".$details_form['time']['#value']['time'];
+	$pid=$order_array->commerce_customer_shipping['und'][0]['profile_id'];
+	$porfile_array=commerce_customer_profile_load($pid);
+	$porfile_array->field_hope_time['und'][0]['value'] =$hope_time;
+	commerce_customer_profile_save($porfile_array);
 }
 
 ?>
