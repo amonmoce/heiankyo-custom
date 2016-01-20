@@ -17,7 +17,7 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
  	}
- 	if($product_type=='gif'){
+ 	if($product_type=='gift'){
  		$form['remark'] = array(
 		  '#title' => t('請填寫禮盒產品'),
 		  '#type' => 'textarea',
@@ -105,6 +105,7 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
  	$order_array=$form_state['order'];
  	$line_item_array=$order_array->commerce_line_items['und'];
  	$odd_quantity='';  //兩個一盒的數量
+ 	$product_title='';
  	foreach ($line_item_array as $key => $value){
  		$line_id=$line_item_array[$key]['line_item_id'];
  		$line=commerce_line_item_load($line_id);
@@ -116,6 +117,7 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
  			if($product_type=='product'){  //盒裝限制產品
  				$product_box_type=$product->field_box_limit['und'][0]['value'];
 	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一盒
+	 				$product_title.="$product->title,";
 	 				$odd_quantity+=$line->quantity;
 	 			}
  			}
@@ -126,7 +128,7 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
 		$form['commerce_shipping']['shipping_service']['#options']=array(
 		'my_store'=>t('到店親取: NT$0.0'),
 		);
-		drupal_set_message(t('您所訂購的盒裝數量並未到達偶數盒，如想使用宅配請回到購物車重新選擇數量，來店親取則不受此限制，感謝您。'), 'status');
+		drupal_set_message(t('您所訂購的 '."$product_title".'為偶數盒一裝,您所訂購的數量並未到達偶數盒，如想使用宅配請回到購物車重新選擇數量，來店親取則不受此限制，感謝您。'), 'status');
  	}
  }
 
