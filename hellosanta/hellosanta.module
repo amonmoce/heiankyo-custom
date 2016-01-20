@@ -36,7 +36,6 @@ function remark_submit($form, &$form_state) {
 
  function hellosanta_form_alter(&$form, &$form_state, $form_id)
  {
- 	
  	if($form_id=='views_form_commerce_cart_form_default'){
 		 $form['#validate'][] = 'hellosanta_batch_commerce_form_validate';
 	}
@@ -162,7 +161,7 @@ function hellosanta_commerce_shipping_service_info() {
     'price_component' => 'shipping',
     'callbacks' => array(
     	'rate' => 'hellosanta_my_store_rate',
-    	'details_form' => 'hellosanta_service_deliver_form',
+    	'details_form' => 'hellosanta_my_store_form',
     	// 'details_form_validate' => 'hellosanta_service_details_form_validate',
     	'details_form_submit' => 'hellosanta_service_details_form_submit',
     ),
@@ -218,8 +217,8 @@ function hellosanta_my_store_rate($shipping_service, $order) {
   );
 }
 
-function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
-	$full_url=url('cart');
+function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+$full_url=url('cart');
 	  $form = array();
 	  $format = 'Y-m-d H:i';
 	  $pane_values['service_details'] += array(
@@ -251,7 +250,45 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    '#required' => TRUE,
 	);
 	$form['shipping_description'] = array(
-		'#markup' => '<a href='.$full_url.'>回到購物車</a>',
+		'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+		);
+	return $form;
+}
+
+function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	$full_url=url('cart');
+	  $form = array();
+	  $format = 'Y-m-d H:i';
+	  $pane_values['service_details'] += array(
+	  	'time' => '',
+	  	'shipping_description' => '',
+	  	);
+	$form['time'] = array(
+	    '#type' => 'date_popup',
+	    '#date_type' => DATE_DATETIME,
+	    '#timepicker' => 'timepicker',
+	    '#timepicker_options' => array(
+	    	'rows' => 4,
+	    	'hours' =>array(
+	    	'starts'=> 8,
+	    	'ends' => 20,
+	    		),
+		'minutes' => array(
+		'starts' => 0,
+		'ends' => 55,
+		'interval' =>5,
+		),
+	    'showCloseButton' => TRUE,
+	    'closeButtonText' => t('Close'),
+	    ),
+	    '#title' => t('請問您希望到店親取或宅配到府時間'),
+	    '#date_format' => $format,
+	    '#date_label_position' => 'within',
+	    '#date_year_range' => '0:+2',
+	    '#required' => TRUE,
+	);
+	$form['shipping_description'] = array(
+		'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量以啟用宅配</a>',
 		);
 	return $form;
 }
