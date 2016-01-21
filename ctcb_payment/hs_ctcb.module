@@ -26,7 +26,7 @@ function hs_ctcb_menu(){
 }
 
 function hs_ctcb_commerce_order_presave($order) {
-  $order->field_order_serial['und'][0]['value']=date("Ymdhis");
+  //$order->field_order_serial['und'][0]['value']=date("Ymdhis");
 }
 
 function hs_ctcb_commerce_payment_method_info() {
@@ -76,18 +76,12 @@ function ctcb_credit_card_submit_form_submit($payment_method, $pane_form, $pane_
 
   global $base_url;
   
-  //加入此次付款方式到payment
-  
-  // //建立commerce交易紀錄
-  // $transaction = commerce_payment_transaction_new('cash', $order_id);
-
-  // $transaction->amount = $charge['amount'];
-  // $transaction->currency_code = $order->commerce_order_total['und'][0]['currency_code'];
-  // $transaction->status = COMMERCE_PAYMENT_STATUS_FAILURE;
-  // $transaction->remote_id = ;
-  // commerce_payment_transaction_save($transaction);
 
   $method_id=$payment_method['method_id'];
+
+  //建立訂單編號
+  $order->field_order_serial['und'][0]['value']=date("Ymdhis");
+  commerce_order_save($order);
 
   //取得傳送參數
   $data=ctcb_environment_argument($method_id,$order,$charge);
