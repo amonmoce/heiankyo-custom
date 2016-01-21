@@ -218,14 +218,17 @@ function hellosanta_my_store_rate($shipping_service, $order) {
 }
 
 function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
-$full_url=url('cart');
-	  $form = array();
-	  $format = 'Y-m-d H:i';
+	$full_url=url('cart');
+	$form = array();
+	$format = 'Y-m-d H:i';
+	$line_id=$order->commerce_line_items['und'][0]['line_item_id'];
+	$line_item_array=commerce_line_item_load($line_id);
+	$line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item_array);
 	  $pane_values['service_details'] += array(
 	  	'time' => '',
 	  	'shipping_description' => '',
 	  	);
-	$form['time'] = array(
+	  $form['time'] = array(
 	    '#type' => 'date_popup',
 	    '#date_type' => DATE_DATETIME,
 	    '#timepicker' => 'timepicker',
@@ -249,17 +252,23 @@ $full_url=url('cart');
 	    '#date_year_range' => '0:+2',
 	    '#required' => TRUE,
 	);
-	$form['shipping_description'] = array(
-		'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+	if($product_type!='gift'){
+		$form['shipping_description'] = array(
+			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量以啟用宅配</a>',
 		);
+	}
 	return $form;
 }
 
 function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
 	$full_url=url('cart');
-	  $form = array();
-	  $format = 'Y-m-d H:i';
-	  $pane_values['service_details'] += array(
+	$form = array();
+	$format = 'Y-m-d H:i';
+	$line_id=$order->commerce_line_items['und'][0]['line_item_id'];
+	$line_item_array=commerce_line_item_load($line_id);
+	$line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item_array);
+	$product_type = $line_item_wrapper->commerce_product->type->value();
+	$pane_values['service_details'] += array(
 	  	'time' => '',
 	  	'shipping_description' => '',
 	  	);
@@ -287,10 +296,15 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    '#date_year_range' => '0:+2',
 	    '#required' => TRUE,
 	);
-	$form['shipping_description'] = array(
-		'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量以啟用宅配</a>',
+	if($product_type!='gift'){
+		$form['shipping_description'] = array(
+			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
 		);
+	}
+	
+
 	return $form;
+
 }
 
 function hellosanta_service_details_form_submit($details_form, $details_values, $line_item){
