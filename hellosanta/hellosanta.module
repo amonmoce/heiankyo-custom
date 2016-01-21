@@ -216,50 +216,7 @@ function hellosanta_my_store_rate($shipping_service, $order) {
     'data' => array(),
   );
 }
-
-function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
-	$full_url=url('cart');
-	$form = array();
-	$format = 'Y-m-d H:i';
-	$line_id=$order->commerce_line_items['und'][0]['line_item_id'];
-	$line_item_array=commerce_line_item_load($line_id);
-	$line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item_array);
-	  $pane_values['service_details'] += array(
-	  	'time' => '',
-	  	'shipping_description' => '',
-	  	);
-	  $form['time'] = array(
-	    '#type' => 'date_popup',
-	    '#date_type' => DATE_DATETIME,
-	    '#timepicker' => 'timepicker',
-	    '#timepicker_options' => array(
-	    	'rows' => 4,
-	    	'hours' =>array(
-	    	'starts'=> 12,
-	    	'ends' => 21,
-	    		),
-		'minutes' => array(
-		'starts' => 0,
-		'ends' => 55,
-		'interval' =>5,
-		),
-	    'showCloseButton' => TRUE,
-	    'closeButtonText' => t('Close'),
-	    ),
-	    '#title' => t('請問您希望到店親取時間'),
-	    '#date_format' => $format,
-	    '#date_label_position' => 'within',
-	    '#date_year_range' => '0:+2',
-	    '#required' => TRUE,
-	);
-	if($product_type!='gift'){
-		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量以啟用宅配</a>',
-		);
-	}
-	return $form;
-}
-
+//宅配到府form
 function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
 	$full_url=url('cart');
 	$form = array();
@@ -301,12 +258,54 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
 		);
 	}
-	
-
 	return $form;
 
 }
+//到店親取form
+function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	$full_url=url('cart');
+	$form = array();
+	$format = 'Y-m-d H:i';
+	$line_id=$order->commerce_line_items['und'][0]['line_item_id'];
+	$line_item_array=commerce_line_item_load($line_id);
+	$line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item_array);
+	$product_type = $line_item_wrapper->commerce_product->type->value();
+	  $pane_values['service_details'] += array(
+	  	'time' => '',
+	  	'shipping_description' => '',
+	  	);
+	  $form['time'] = array(
+	    '#type' => 'date_popup',
+	    '#date_type' => DATE_DATETIME,
+	    '#timepicker' => 'timepicker',
+	    '#timepicker_options' => array(
+	    	'rows' => 4,
+	    	'hours' =>array(
+	    	'starts'=> 12,
+	    	'ends' => 21,
+	    		),
+		'minutes' => array(
+		'starts' => 0,
+		'ends' => 55,
+		'interval' =>5,
+		),
+	    'showCloseButton' => TRUE,
+	    'closeButtonText' => t('Close'),
+	    ),
+	    '#title' => t('請問您希望到店親取時間'),
+	    '#date_format' => $format,
+	    '#date_label_position' => 'within',
+	    '#date_year_range' => '0:+2',
+	    '#required' => TRUE,
+	);
+	if($product_type!='gift'){
+		$form['shipping_description'] = array(
+			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+		);
+	}
+	return $form;
 
+}
 function hellosanta_service_details_form_submit($details_form, $details_values, $line_item){
 	$oid=$line_item->order_id;
 	$order_array=commerce_order_load($oid);
