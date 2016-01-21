@@ -255,7 +255,8 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	);
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+			'#markup' => '<a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+                padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
 	return $form;
@@ -300,7 +301,8 @@ function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $ord
 	);
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+			'#markup' => '<a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+                padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
 	return $form;
