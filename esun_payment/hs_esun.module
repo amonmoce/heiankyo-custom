@@ -24,7 +24,7 @@ function hs_esun_menu(){
 }
 
 function hs_esun_commerce_order_presave($order) {
-  $order->field_order_serial['und'][0]['value']=date("Ymdhis");
+  //$order->field_order_serial['und'][0]['value']=date("Ymdhis");
 }
 
 function hs_esun_commerce_payment_method_info() {
@@ -74,6 +74,10 @@ function esun_credit_card_submit_form_submit($payment_method, $pane_form, $pane_
 
   $method_id=$payment_method['method_id'];
 
+  //建立訂單編號
+  $order->field_order_serial['und'][0]['value']=date("Ymdhis");
+  commerce_order_save($order);
+  
   //取得傳送參數
   $data=esun_environment_argument($method_id,$order,$charge);
 
