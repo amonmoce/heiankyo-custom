@@ -30,6 +30,7 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
  		$form['remark'] = array(
 		  '#title' => t('請填寫禮盒產品'),
 		  '#type' => 'textarea',
+		  '#required' => TRUE,
 		);
 		$form['#submit'][]='remark_submit';
 	}
@@ -197,8 +198,8 @@ function hellosanta_deliver_rate($shipping_service, $order) {
  			$product=commerce_product_load($product_id);
  			$product_type=$product->type;
  			if($product_type=='product'){  //盒裝限制產品
+ 				isset($product->field_box_limit['und'][0]['value'])?($product->field_box_limit['und'][0]['value']):($product->field_box_limit['und'][0]['value']=0);
 	 			$product_box_type=$product->field_box_limit['und'][0]['value'];
-	 			isset($product->field_box_limit['und'][0]['value'])?($product->field_box_limit['und'][0]['value']):($product->field_box_limit['und'][0]['value']=0);
 	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一裝
 	 				$box=$line_item->quantity/2;  
 	 				$box_total+=$box;
@@ -264,9 +265,16 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    '#date_year_range' => '0:+2',
 	    '#required' => TRUE,
 	);
+	if($product_type='gift'){
+		$form['shipping_description'] = array(
+			'#markup' => '黑貓宅配指定配送時間：依照您選擇的時間選出最適當的配送時段<br/>
+時段則分別：中午前、12時-17時、17時-20時<br/><br/>'
+			);
+	}
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+			'#markup' => '黑貓宅配指定配送時間：依照您選擇的時間選出最適當的配送時段<br/>
+時段則分別：中午前、12時-17時、17時-20時<br/><br/><a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
                 padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
