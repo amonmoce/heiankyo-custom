@@ -123,6 +123,7 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
  			$product=commerce_product_load($product_id);
  			$product_type=$product->type;
  			if($product_type=='product'){  //盒裝限制產品
+ 				isset($product->field_box_limit['und'][0]['value'])?($product->field_box_limit['und'][0]['value']):($product->field_box_limit['und'][0]['value']=0);
  				$product_box_type=$product->field_box_limit['und'][0]['value'];
 	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一盒
 	 				$product_title.="$product->title,";
@@ -197,6 +198,7 @@ function hellosanta_deliver_rate($shipping_service, $order) {
  			$product_type=$product->type;
  			if($product_type=='product'){  //盒裝限制產品
 	 			$product_box_type=$product->field_box_limit['und'][0]['value'];
+	 			isset($product->field_box_limit['und'][0]['value'])?($product->field_box_limit['und'][0]['value']):($product->field_box_limit['und'][0]['value']=0);
 	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一裝
 	 				$box=$line_item->quantity/2;  
 	 				$box_total+=$box;
