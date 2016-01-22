@@ -17,6 +17,15 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
  	}
+ 	isset($product->field_remark_check['und'][0]['value'])?($product->field_remark_check['und'][0]['value']):($product->field_remark_check['und'][0]['value']=0);//防止沒填寫，給予預設關閉備註
+ 	if($product_type=='product'&&$product->field_remark_check['und'][0]['value']==1){  //填寫產品備註
+ 		$form['remark'] = array(
+		  '#title' => t('請填寫產品備註'),
+		  '#type' => 'textarea',
+		  '#required' => TRUE,
+		);
+		$form['#submit'][]='remark_submit';
+ 	}
  	if($product_type=='gift'){
  		$form['remark'] = array(
 		  '#title' => t('請填寫禮盒產品'),
