@@ -17,10 +17,20 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
  	}
+ 	isset($product->field_remark_check['und'][0]['value'])?($product->field_remark_check['und'][0]['value']):($product->field_remark_check['und'][0]['value']=0);//防止沒填寫，給予預設關閉備註
+ 	if($product_type=='product'&&$product->field_remark_check['und'][0]['value']==1){  //填寫產品備註
+ 		$form['remark'] = array(
+		  '#title' => t('請填寫產品備註'),
+		  '#type' => 'textarea',
+		  '#required' => TRUE,
+		);
+		$form['#submit'][]='remark_submit';
+ 	}
  	if($product_type=='gift'){
  		$form['remark'] = array(
 		  '#title' => t('請填寫禮盒產品'),
 		  '#type' => 'textarea',
+		  '#required' => TRUE,
 		);
 		$form['#submit'][]='remark_submit';
 	}
@@ -114,6 +124,7 @@ function hellosanta_form_commerce_checkout_form_shipping_alter(&$form, &$form_st
  			$product=commerce_product_load($product_id);
  			$product_type=$product->type;
  			if($product_type=='product'){  //盒裝限制產品
+ 				isset($product->field_box_limit['und'][0]['value'])?($product->field_box_limit['und'][0]['value']):($product->field_box_limit['und'][0]['value']=0);
  				$product_box_type=$product->field_box_limit['und'][0]['value'];
 	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一盒
 	 				$product_title.="$product->title,";
@@ -187,6 +198,7 @@ function hellosanta_deliver_rate($shipping_service, $order) {
  			$product=commerce_product_load($product_id);
  			$product_type=$product->type;
  			if($product_type=='product'){  //盒裝限制產品
+ 				isset($product->field_box_limit['und'][0]['value'])?($product->field_box_limit['und'][0]['value']):($product->field_box_limit['und'][0]['value']=0);
 	 			$product_box_type=$product->field_box_limit['und'][0]['value'];
 	 			if($product->field_box_limit['und'][0]['value']=='0'){  //兩個一裝
 	 				$box=$line_item->quantity/2;  
@@ -218,6 +230,7 @@ function hellosanta_my_store_rate($shipping_service, $order) {
 }
 //宅配到府form
 function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	drupal_add_js(drupal_get_path('module', 'hellosanta') . '/santa.js');
 	$full_url=url('cart');
 	$form = array();
 	$format = 'Y-m-d H:i';
@@ -253,9 +266,17 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    '#date_year_range' => '0:+2',
 	    '#required' => TRUE,
 	);
+	if($product_type='gift'){
+		$form['shipping_description'] = array(
+			'#markup' => '黑貓宅配指定配送時間：依照您選擇的時間選出最適當的配送時段<br/>
+時段則分別：中午前、12時-17時、17時-20時<br/><br/>'
+			);
+	}
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+			'#markup' => '黑貓宅配指定配送時間：依照您選擇的時間選出最適當的配送時段<br/>
+時段則分別：中午前、12時-17時、17時-20時<br/><br/><a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+                padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
 	return $form;
@@ -300,7 +321,8 @@ function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $ord
 	);
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.'>點此回到購物車重新分配數量</a>',
+			'#markup' => '<a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+                padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
 	return $form;
