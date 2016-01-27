@@ -12,8 +12,6 @@ function hellosanta_form_commerce_cart_add_to_cart_form_alter(&$form, &$form_sta
 	$product=commerce_product_load($pid);
 	$product_type=$product->type;
 	// dpm($product_type);
-	
-	
     if($form['#attributes']['class'][0]='commerce-add-to-cart'){
  		$form['submit']['#value']='加入購物車';
  	}
@@ -62,31 +60,27 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
 		$line_id=$value['line_item_id'];
 		$line=commerce_line_item_load($line_id);
 		if (isset($line->commerce_product['und'][0]['product_id'])){
-	$product_id=$line->commerce_product['und'][0]['product_id'];
-		$product=commerce_product_load($product_id);		
-		$product_title=$product->title;
-		$product_type=$product->type;
-}
-		
-		// dpm($product_type);
-		if($product_type=='class'){
-			$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
-			if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
-				form_set_error('quantity',t("很抱歉 <span>$product_title</span> 只剩下 $pre_tt 位"));
+			$product_id=$line->commerce_product['und'][0]['product_id'];
+			$product=commerce_product_load($product_id);		
+			$product_title=$product->title;
+			$product_type=$product->type;
+				if($product_type=='class'){
+				$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
+				if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
+					form_set_error('quantity',t("很抱歉 <span>$product_title</span> 只剩下 $pre_tt 位"));
+				}
 			}
-		}
-		elseif($product_type=='product'){
-			$pre_count=isset($product->field_per_count_limit['und'][0]['value'])?($product->field_per_count_limit['und'][0]['value']):NULL;
-			$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
-			
-			if ($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_count) {
-				form_set_error('quantity',t("很抱歉 <span>$product_title</span> 一次最多只能訂購 $pre_count 條"));
+			elseif($product_type=='product'){
+				$pre_count=isset($product->field_per_count_limit['und'][0]['value'])?($product->field_per_count_limit['und'][0]['value']):NULL;
+				$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
+				if ($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_count) {
+					form_set_error('quantity',t("很抱歉 <span>$product_title</span> 一次最多只能訂購 $pre_count 條"));
+				}
+				if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
+					form_set_error('quantity',t("很抱歉 <span>$product_title</span> 今日只剩下 $pre_tt 條"));
+				}
 			}
-			if($form_state['clicked_button']['#id'] == 'edit-checkout' && $edit_quantity_array[$key]>$pre_tt){
-				form_set_error('quantity',t("很抱歉 <span>$product_title</span> 今日只剩下 $pre_tt 條"));
-			}
-		}
-		
+		}	
 	}
  }
 //結帳完成將當日的數量扣掉
@@ -236,13 +230,15 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	drupal_add_js(drupal_get_path('module', 'hellosanta') . '/santa.js');
 	$full_url=url('cart');
 	$form = array();
-	$format = 'Y-m-d H:i';
+	$format = 'Y-m-d';
 	$line_id=$order->commerce_line_items['und'][0]['line_item_id'];
 	$line_item_array=commerce_line_item_load($line_id);
 	$line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item_array);
 	$product_type = $line_item_wrapper->commerce_product->type->value();
+	// dpm($product_type);
 	$pane_values['service_details'] += array(
 	  	'time' => '',
+	  	'timing'=>'',
 	  	'shipping_description' => '',
 	  	);
 	$form['time'] = array(
@@ -269,27 +265,25 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	    '#date_year_range' => '0:+2',
 	    '#required' => TRUE,
 	);
-	if($product_type='gift'){
-		$form['shipping_description'] = array(
-			'#markup' => '黑貓宅配指定配送時間：依照您選擇的時間選出最適當的配送時段<br/>
-時段則分別：中午前、12時-17時、17時-20時<br/><br/>'
-			);
-	}
+	$form['timing'] = array(
+	  '#title' => t('希望到貨時段'),
+	  '#type' => 'select',
+	  '#options' => array(t('不指定'),t('中午前'), t('12點~17點'), t('17點~20點'), ),
+	);
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '黑貓宅配指定配送時間：依照您選擇的時間選出最適當的配送時段<br/>
-時段則分別：中午前、12時-17時、17時-20時<br/><br/><a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+			'#markup' => '<a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
                 padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
 	return $form;
-
 }
 //到店親取form
 function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	drupal_add_js(drupal_get_path('module', 'hellosanta') . '/santa.js');
 	$full_url=url('cart');
 	$form = array();
-	$format = 'Y-m-d H:i';
+	$format = 'Y-m-d';
 	$line_id=$order->commerce_line_items['und'][0]['line_item_id'];
 	$line_item_array=commerce_line_item_load($line_id);
 	$line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item_array);
@@ -324,18 +318,23 @@ function hellosanta_my_store_form($pane_form, $pane_values, $checkout_pane, $ord
 	);
 	if($product_type!='gift'){
 		$form['shipping_description'] = array(
-			'#markup' => '<a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
+			'#markup' => '<p>營業時間為12:30~21:30</p></br><a href='.$full_url.' style="background:#b9b209; color:#FFF;border: 2px #FFF solid;border-radius: 5px;
                 padding: 5px 20px;">點此回到購物車重新分配數量</a>',
 		);
 	}
 	return $form;
-
 }
 function hellosanta_service_details_form_submit($details_form, $details_values, $line_item){
 	$oid=$line_item->order_id;
 	$order_array=commerce_order_load($oid);
-	$hope_time='';
-	$hope_time=$details_form['time']['#value']['date']." ".$details_form['time']['#value']['time'];
+	$hope_time="";
+	if(isset($details_form['timing']['#value'])){
+		$timing_value=$details_form['timing']['#value'];
+		$hope_time.=$details_form['time']['#value']['date']." ".$details_form['timing']['#options']["$timing_value"];
+	} 
+	else{
+		$hope_time.=$details_form['time']['#value']['date']."  營業時間來店親取";
+	}
 	$pid=$order_array->commerce_customer_shipping['und'][0]['profile_id'];
 	$porfile_array=commerce_customer_profile_load($pid);
 	$porfile_array->field_hope_time['und'][0]['value'] =$hope_time;
