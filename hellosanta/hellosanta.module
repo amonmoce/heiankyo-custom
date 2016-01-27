@@ -233,6 +233,7 @@ function hellosanta_my_store_rate($shipping_service, $order) {
 }
 //宅配到府form
 function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pane, $order, $shipping_service){
+	drupal_add_js(drupal_get_path('module', 'hellosanta') . '/santa.js');
 	$full_url=url('cart');
 	$form = array();
 	$format = 'Y-m-d H:i';
