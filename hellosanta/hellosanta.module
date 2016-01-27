@@ -61,10 +61,13 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
 	foreach ($line_item_array as $key => $value) {
 		$line_id=$value['line_item_id'];
 		$line=commerce_line_item_load($line_id);
-		$product_id=$line->commerce_product['und'][0]['product_id'];
+		if (isset($line->commerce_product['und'][0]['product_id'])){
+	$product_id=$line->commerce_product['und'][0]['product_id'];
 		$product=commerce_product_load($product_id);		
 		$product_title=$product->title;
 		$product_type=$product->type;
+}
+		
 		// dpm($product_type);
 		if($product_type=='class'){
 			$pre_tt=isset($product->field_total_count['und'][0]['value'])?($product->field_total_count['und'][0]['value']):NULL;
