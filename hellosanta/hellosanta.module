@@ -49,13 +49,12 @@ function remark_submit($form, &$form_state) {
 	}
 	if($form_id=='views_form_commerce_cart_form_default'){
 		
-		$form['must_read'] = array(
+		$form['actions']['must_read'] = array(
 			'#type' => 'checkbox',
 			'#title' => t('我已經了解 <a href=node/159 target=_blank>使用條款</a>'),
 			'#required' => TRUE,
-			'#weight' => 1000,
+			'#weight' => -1000,
 			);
-		
 	}
 
  }
@@ -255,21 +254,6 @@ function hellosanta_service_deliver_form($pane_form, $pane_values, $checkout_pan
 	$form['time'] = array(
 	    '#type' => 'date_popup',
 	    '#date_type' => DATE_DATETIME,
-	    '#timepicker' => 'timepicker',
-	    '#timepicker_options' => array(
-	    	'rows' => 4,
-	    	'hours' =>array(
-	    	'starts'=> 8,
-	    	'ends' => 20,
-	    		),
-		'minutes' => array(
-		'starts' => 0,
-		'ends' => 55,
-		'interval' =>5,
-		),
-	    'showCloseButton' => TRUE,
-	    'closeButtonText' => t('Close'),
-	    ),
 	    '#title' => t('請問您希望宅配到府時間'),
 	    '#date_format' => $format,
 	    '#date_label_position' => 'within',
