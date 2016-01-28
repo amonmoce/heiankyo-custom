@@ -46,13 +46,9 @@ function remark_submit($form, &$form_state) {
  {
  	if($form_id=='views_form_commerce_cart_form_default'){
 		 $form['#validate'][] = 'hellosanta_batch_commerce_form_validate';
-	}
-	if($form_id=='views_form_commerce_cart_form_default'){
-		
-		$form['actions']['must_read'] = array(
+		 $form['actions']['must_read'] = array(
 			'#type' => 'checkbox',
 			'#title' => t('我已經了解 <a href=node/159 target=_blank>使用條款</a>'),
-			'#required' => TRUE,
 			'#weight' => -1000,
 			);
 	}
@@ -60,7 +56,9 @@ function remark_submit($form, &$form_state) {
  }
 
 function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
-	//dpm($form_state);
+	if($form_state['clicked_button']['#id'] == 'edit-checkout' &&$form['actions']['must_read']['#value']=='0'){
+		form_set_error('must_read',t("您並未同意使用條款"));
+	}
 	$line_item_array=$form_state['order']->commerce_line_items['und'];
 	//dpm($line_item_array);
 	$edit_quantity_array=$form_state['values']['edit_quantity'];
@@ -160,18 +158,6 @@ function hellosanta_commerce_shipping_method_info() {
 
 function hellosanta_commerce_shipping_service_info() {
   $shipping_services = array();
-  $shipping_services['deliver'] = array(
-    'title' => t('宅配到府'),
-    'display_title' => t('宅配到府'),
-    'shipping_method' => 'hellosanta_shipping_method',
-    'price_component' => 'shipping',
-    'callbacks' => array(
-      'rate' => 'hellosanta_deliver_rate',
-      'details_form' => 'hellosanta_service_deliver_form',
-      // 'details_form_validate' => 'hellosanta_service_details_form_validate',
-      'details_form_submit' => 'hellosanta_service_details_form_submit',
-    ),
-  );
   $shipping_services['my_store'] = array(
     'title' => t('到店親取'),
     'display_title' => t('到店親取'),
@@ -184,6 +170,19 @@ function hellosanta_commerce_shipping_service_info() {
     	'details_form_submit' => 'hellosanta_service_details_form_submit',
     ),
   );
+  $shipping_services['deliver'] = array(
+    'title' => t('宅配到府'),
+    'display_title' => t('宅配到府'),
+    'shipping_method' => 'hellosanta_shipping_method',
+    'price_component' => 'shipping',
+    'callbacks' => array(
+      'rate' => 'hellosanta_deliver_rate',
+      'details_form' => 'hellosanta_service_deliver_form',
+      // 'details_form_validate' => 'hellosanta_service_details_form_validate',
+      'details_form_submit' => 'hellosanta_service_details_form_submit',
+    ),
+  );
+  
   return $shipping_services;
 }
 
