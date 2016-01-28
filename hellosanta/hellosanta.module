@@ -61,7 +61,8 @@ function hellosanta_batch_commerce_form_validate(&$form, $form_state) {
 		$line=commerce_line_item_load($line_id);
 		if (isset($line->commerce_product['und'][0]['product_id'])){
 			$product_id=$line->commerce_product['und'][0]['product_id'];
-			$product=commerce_product_load($product_id);		
+			$product=commerce_product_load($product_id);	
+			
 			$product_title=$product->title;
 			$product_type=$product->type;
 				if($product_type=='class'){
